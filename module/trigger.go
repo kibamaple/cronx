@@ -41,7 +41,7 @@ func (this CTrigger) OnResult(result *common.CResult) {
 	}
 
 	for _,rel := range rels{
-		job_id,job_err := computeTime(result.ID,rel.job.Spec,rel.Offset)
+		job_id,job_err := computeTime(result.ID,rel.Job.Spec,rel.Offset)
 		if job_err != nil {
 			this.EmitError(job_err)
 			continue
@@ -67,7 +67,7 @@ func (this CTrigger) OnResult(result *common.CResult) {
 		}
 
 		if count >= len(rel.Deps) {
-			task := &common.CTask{job_id,rel.job.Name,rel.job.Task,rel.job.Params,rel.job.Status}
+			task := &common.CTask{job_id,rel.Job.Name,rel.Job.Task,rel.Job.Params,rel.Job.Status}
 			this.EmitTask(task)
 		}
 	}

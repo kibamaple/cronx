@@ -4,7 +4,7 @@ type CTask struct {
 	ID int64
 	Job string
 	Name string
-	Params map[string]string
+	Params *map[string]string
 	Status uint8
 }
 

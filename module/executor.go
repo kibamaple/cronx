@@ -10,7 +10,7 @@ import (
 const ENV_Equal = "="
 const Execute_Base = 10
 
-var runTask = func(path string,name string,params map[string]string,args ...string) err {
+var runTask = func(path string,name string,params *map[string]string,args ...string) err {
 	cmd := exec.Command(name)
 	env := os.Environ()
 	for key,value := range params {

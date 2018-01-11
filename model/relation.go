@@ -10,7 +10,7 @@ import (
 )
 
 type IRelationModel interface {
-	GetAll(string,uint) ([]common.CRelation,error)
+	GetAll(string,uint) ([]*common.CRelation,error)
 }
 
 type CRelationModel struct {
@@ -20,7 +20,7 @@ type CRelationModel struct {
 	timeout time.Duration
 }
 
-func (this CRelationModel) GetAll(job string,status uint8) ([]common.CRelation,error) {
+func (this CRelationModel) GetAll(job string,status uint8) ([]*common.CRelation,error) {
 	client,err := clientv3.NewFromURL(this.dsn)
 	if err != nil {
 		return err
@@ -38,14 +38,14 @@ func (this CRelationModel) GetAll(job string,status uint8) ([]common.CRelation,e
 		return nil,fmt.Errorf("Error:%s is not found",key)
 	}
 
-	var rels []common.CRelation
+	var rels []*common.CRelation
 	for _, kv := range res.Kvs {
 		var rel common.CRelation
 		_err = json.Unmarshal([]byte(kv.Value), &rel)
 		if _err != nil {
 			continue
 		}
-		rels = append(rels,rel)
+		rels = append(rels,&rel)
 	}
 	return rels,_err
 }

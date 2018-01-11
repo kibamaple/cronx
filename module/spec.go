@@ -10,14 +10,14 @@ import (
 type CSpec struct {
 	common.CErrorProvider
 	common.CTaskProvider
-	common.CEventListener
-	abortChan chan struct{}
+	eventModel *model.IEventModel
+	signalChan chan struct{}
 	startWG sync.WaitGroup
 	stopWG sync.WaitGroup
 }
 
 func (this CSpec) runJob(timer *tool.CTimer,job *model.CJob){
-	err := this.timer.Add(job.Name,job.Spec,func (id int64) {
+	err := timer.Add(job.Name,job.Spec,func (id int64) {
 		task := &common.CTask{id,job.Name,job.Task,job.Params,job.Status}
 		this.EmitTask(task)
 	})
@@ -26,32 +26,77 @@ func (this CSpec) runJob(timer *tool.CTimer,job *model.CJob){
 	}
 }
 
+func (this CSpec) run () {
+	var events map[string]model.CEvent
+	timer := tool.NewTimer()
+	timer.Start()
+	defer timer.Stop()
+
+	// election watcher
+	for {
+		if err := this.elect.Campaign(); err != nil {
+			select {
+				case _,ok := <-this.signalChan:
+					if !ok {
+						return true
+					}
+				default:
+					this.EmitError(err)
+					continue
+			}
+		}
+	}
+	defer this.elect.Resign()
+
+	// watch spec job change
+	eventChan,errorChan := this.eventModel.Watch(this.signalChan)
+	for {
+		select {
+			case _,ok := <-this.signalChan:
+				if !ok {
+					return true
+				}
+			case err,ok := <-errorChan:
+				if ok {
+					this.EmitError(err)
+				}else{
+					break	
+				}
+			case event,ok := <-eventChan:
+				if ok {
+					this.update(event,events,timer)
+				}else{
+					break
+				}
+		}
+	}
+	return false
+}
+
+func (this CSpec) update(event *model.CEvent,events map[string]*model.CEvent,timer *tool.CTimer){
+	_event,ok := events[event.Key]
+	if ok && _event.Time > event.Time {
+		continue
+	}
+	if event.Name == Delete || event.Name == Put {
+		timer.Remove(event.Key)
+	}
+	if event.Name != Delete {
+		this.runJob(timer,event.Job)
+	}
+	events[event.Key] = event
+}
+
 func (this CSpec) process() {
 	this.startWG.Wait()
 
-	var events map[string]common.CEvent
-	timer := tool.NewTimer()
-	timer.start()
-	defer timer.stop()
 	for {
-		select {
-			case <-this.abortChan:
-				this.stopWG.Done()
-				return
-			case event := <- this.EventChan:
-				_event,ok := this.events[event.Key]
-				if ok && _event.Time > event.Time {
-					continue
-				}
-				if event.Name == Delete || event.Name == Put {
-					timer.Remove(event.Key)
-				}
-				if event.Name != Delete {
-					this.runJob(timer,&event.Job)
-				}
-				this.datas[event.Key] = event
+		if this.run() {
+			this.stopWG.Done()
+			break
 		}
 	}
+
 }
 
 func (this CSpec) Init() {
@@ -62,6 +107,6 @@ func (this CSpec) Start() {
 }
 
 func (this CSpec) Stop() {
-	close(this.abortChan)
+	close(this.signalChan)
 	this.stopWG.Done()
 }

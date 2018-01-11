@@ -1,9 +1,9 @@
 package common
 
 type CRelation struct {
-	CJob
+	Job *CJob
 	Offset int64
-	Deps []CDep
+	Deps []*CDep
 }
 
 type CDep struct {
