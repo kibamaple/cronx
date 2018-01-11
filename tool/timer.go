@@ -1,4 +1,4 @@
-package core
+package tool
 
 import (
 	fmt "fmt"
@@ -6,7 +6,7 @@ import (
 	cron "github.com/kibamaple/cron"
 )
 
-var newTimer = func() ITimer{
+var newTimer = func() CTimer{
 	timer := cron.New();
 	mappings := make(map[string]cron.EntryID)
 	return CTimer{timer,mappings}
