@@ -6,7 +6,14 @@ import (
 	cron "github.com/kibamaple/cron"
 )
 
-var newTimer = func() CTimer{
+type ITimer interface{
+	Add(string,string,func(int64)) error
+	Remove(string)
+	Start()
+	Stop()
+}
+
+var newTimer = func() ITimer{
 	timer := cron.New();
 	mappings := make(map[string]cron.EntryID)
 	return CTimer{timer,mappings}

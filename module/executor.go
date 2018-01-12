@@ -55,13 +55,15 @@ type CHandleExecutor struct {
 	common.CConcurrent
 }
 
-func (this CHandleExecutor) Process(abortChan chan struct{}){
+func (this CHandleExecutor) Process(signalChan chan struct{}){
 	for {
 		select	{
 			case task := <-this.TaskChan:
 				this.CExecutor.OnTask(task)
-			case <-abortChan:
-				return
+			case _,ok := <-signalChan:
+				if !ok {
+					break
+				}
 		}
 	}
 }

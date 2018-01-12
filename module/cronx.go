@@ -46,7 +46,7 @@ type CHandleCronx struct {
 	common.CConcurrent
 }
 
-func (this CHandleCronx) Process(abortChan <-chan struct{}){
+func (this CHandleCronx) Process(signalChan <-chan struct{}){
 	for {
 		select	{
 			case err := <-this.ErrorChan:
@@ -55,8 +55,10 @@ func (this CHandleCronx) Process(abortChan <-chan struct{}){
 				this.CCronx.OnTask(task)
 			case result := <-this.ResultChan:
 				this.CCronx.OnResult(result)
-			case <-abortChan:
-				return
+			case _,ok := <-signalChan:
+				if !ok {
+					break
+				}
 		}
 	}
 }

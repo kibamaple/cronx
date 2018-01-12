@@ -8,6 +8,9 @@ import (
 )
 
 type CSpec struct {
+	dsn string
+	key string
+	val string
 	common.CErrorProvider
 	common.CTaskProvider
 	eventModel *model.IEventModel
@@ -16,7 +19,7 @@ type CSpec struct {
 	stopWG sync.WaitGroup
 }
 
-func (this CSpec) runJob(timer *tool.CTimer,job *model.CJob){
+func (this CSpec) runJob(timer *tool.ITimer,job *model.CJob){
 	err := timer.Add(job.Name,job.Spec,func (id int64) {
 		task := &common.CTask{id,job.Name,job.Task,job.Params,job.Status}
 		this.EmitTask(task)
@@ -31,10 +34,12 @@ func (this CSpec) run () {
 	timer := tool.NewTimer()
 	timer.Start()
 	defer timer.Stop()
+	elect := tool.NewElection(this.dsn,this.key,this.val)
+	defer elect.Destroy()
 
 	// election watcher
 	for {
-		if err := this.elect.Campaign(); err != nil {
+		if err := elect.Campaign(); err != nil {
 			select {
 				case _,ok := <-this.signalChan:
 					if !ok {
@@ -46,7 +51,7 @@ func (this CSpec) run () {
 			}
 		}
 	}
-	defer this.elect.Resign()
+	defer elect.Resign()
 
 	// watch spec job change
 	eventChan,errorChan := this.eventModel.Watch(this.signalChan)
@@ -73,7 +78,7 @@ func (this CSpec) run () {
 	return false
 }
 
-func (this CSpec) update(event *model.CEvent,events map[string]*model.CEvent,timer *tool.CTimer){
+func (this CSpec) update(event *model.CEvent,events map[string]*model.CEvent,timer *tool.ITimer){
 	_event,ok := events[event.Key]
 	if ok && _event.Time > event.Time {
 		continue

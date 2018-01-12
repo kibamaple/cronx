@@ -4,7 +4,7 @@ type CTask struct {
 	ID int64
 	Job string
 	Name string
-	Params *map[string]string
+	Params map[string]string
 	Status uint8
 }
 
@@ -21,11 +21,11 @@ func (this CTaskListener) OnTask(task *CTask) {
 }
 
 type ITaskProvider interface {
-	AddTaskListener(*ITaskListener)
+	AddTaskListener(ITaskListener)
 }
 
 type CTaskProvider struct {
-	taskListeners []*ITaskListener
+	taskListeners []ITaskListener
 }
 
 func (this CTaskProvider) EmitTask(task *CTask) {
@@ -34,6 +34,6 @@ func (this CTaskProvider) EmitTask(task *CTask) {
 	}
 }
 
-func (this CTaskProvider) AddTaskListener(listener *ITaskListener) {
+func (this CTaskProvider) AddTaskListener(listener ITaskListener) {
 	this.taskListeners = append(this.taskListeners,listener)
 }

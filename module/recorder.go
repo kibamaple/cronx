@@ -29,13 +29,15 @@ type CHandleRecorder struct {
 	common.CConcurrent
 }
 
-func (this CHandleRecorder) Process(abortChan chan struct{}){
+func (this CHandleRecorder) Process(signalChan chan struct{}){
 	for {
 		select	{
 			case result := <-this.ResultChan:
 				this.CRecorder.OnResult(result)
-			case <-abortChan:
-				return
+			case _,ok := <-signalChan:
+				if !ok {
+					break
+				}
 		}
 	}
 }

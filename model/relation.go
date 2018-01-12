@@ -1,11 +1,13 @@
 package model
 
 import (
+	"strings"
+	"strconv"
+	"encoding/json"
 	fmt "fmt"
 	time "time"
 	context "context"
 	clientv3 "github.com/coreos/etcd/clientv3"
-	mvccpb "github.com/coreos/etcd/mvcc/mvccpb"
 	common "github.com/kibamaple/cronx/common"
 )
 
@@ -23,7 +25,7 @@ type CRelationModel struct {
 func (this CRelationModel) GetAll(job string,status uint8) ([]*common.CRelation,error) {
 	client,err := clientv3.NewFromURL(this.dsn)
 	if err != nil {
-		return err
+		return nil,err
 	}
 	defer client.Close()
 	key := strings.Join([]string{this.rel,strconv.Itoa(int(status)),job},this.sep)

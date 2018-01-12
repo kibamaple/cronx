@@ -19,11 +19,11 @@ func (this CResultListener) OnResult(result *CResult) {
 }
 
 type IResultProvider interface {
-	AddResultListener(*IResultListener)
+	AddResultListener(IResultListener)
 }
 
 type CResultProvider struct {
-	resultListeners []*IResultListener
+	resultListeners []IResultListener
 }
 
 func (this CResultProvider) EmitResult(result *CResult) {
@@ -32,6 +32,6 @@ func (this CResultProvider) EmitResult(result *CResult) {
 	}
 }
 
-func (this CResultProvider) AddResultListener(listener *IResultListener) {
+func (this CResultProvider) AddResultListener(listener IResultListener) {
 	this.resultListeners = append(this.resultListeners,listener)
 }

@@ -1,7 +1,7 @@
 package model
 
 import (
-	fmt "fmt"
+	"encoding/json"
 	time "time"
 	context "context"
 	clientv3 "github.com/coreos/etcd/clientv3"
@@ -14,7 +14,7 @@ type CEvent_Name uint8
 type CEvent struct {
 	Name CEvent_Name
 	Key string
-	Job *CJob
+	Job *common.CJob
 	time int64
 }
 

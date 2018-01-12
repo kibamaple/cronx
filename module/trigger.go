@@ -87,13 +87,15 @@ type CHandleTrigger struct {
 	common.CConcurrent
 }
 
-func (this CHandleTrigger) Process(abortChan chan struct{}){
+func (this CHandleTrigger) Process(signalChan chan struct{}){
 	for {
 		select	{
 			case result := <-this.ResultChan:
 				this.CTrigger.OnResult(result)
-			case <-abortChan:
-				return
+			case _,ok := <-signalChan:
+				if !ok {
+					break
+				}
 		}
 	}
 }
